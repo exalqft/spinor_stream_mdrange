@@ -98,18 +98,28 @@ make_repeated_sequence(std::size_t value)
   return make_repeated_sequence_impl(value, std::make_index_sequence<N>{});
 }
 
-template <typename V>
+template <typename V, typename P>
 auto
-get_tiling(const V view)
+get_tiling(const V view, const P policy)
 {
   if constexpr (std::is_same_v<typename V::execution_space, Kokkos::DefaultHostExecutionSpace>){
     // for OpenMP we parallelise over the outermost (leftmost) dimensions
     return Kokkos::Array<std::size_t,view.rank()>({1,1,view.extent(2),view.extent(3)});
   } else {
-    // for GPUs we use a 128 thread tile-size
-    return Kokkos::Array<std::size_t,view.rank()>({4,4,8,1});
+    // for GPUs we use the recommended tiling for now, we just need to convert it appropriately
+    // from "array_index_type"
+    // oh my.. the recommended tile size exceeds the maximum block size on GPUs for large ranks
+    // let's cap the tiling at 4 dims
+    constexpr auto max_rank = view.rank() > 4 ? 4 : view.rank();
+    Kokkos::Array<std::size_t,max_rank> res;
+    const auto rec = policy.tile_size_recommended();
+    for(int i = 0; i < max_rank; ++i){
+      res[i] = rec[i];
+    }
+    return res;
   }
 }
+
 template <int Ns, int Nc>
 struct deviceSpinor {
   deviceSpinor() = delete;
@@ -134,7 +144,8 @@ struct deviceSpinor {
     const StreamDeviceArray vconst = V[0][0];
     constexpr auto rank = vconst.rank();
     const auto stream_array_size = vconst.extent(0);
-    const auto tiling = get_tiling(vconst);
+    const Policy<rank> default_policy(make_repeated_sequence<rank>(0), make_repeated_sequence<rank>(stream_array_size));
+    auto tiling = get_tiling(vconst, default_policy);
     for(int is = 0; is < Ns; is++){
       for(int ic = 0; ic < Nc; ic++){
         Kokkos::parallel_for(
@@ -205,13 +216,14 @@ template <int Ns, int Nc>
 void perform_set(const deviceSpinor<Ns,Nc> a, const val_t scalar) {
   constexpr auto rank = a.view[0][0].rank();
   const auto stream_array_size = a.view[0][0].extent(0);
-  const auto tiling = get_tiling(a.view[0][0]);
-  
+  const Policy<rank> 
+    default_policy(make_repeated_sequence<rank>(0), make_repeated_sequence<rank>(stream_array_size));
+  const auto tiling = get_tiling(a.view[0][0], default_policy);
   for(int is = 0; is < Ns; is++){
     for(int ic = 0; ic < Nc; ic++){
       Kokkos::parallel_for(
           "set", 
-          Policy<rank>(make_repeated_sequence<rank>(0), make_repeated_sequence<rank>(stream_array_size), tiling),
+          Policy<rank>(make_repeated_sequence<rank>(0), make_repeated_sequence<rank>(stream_array_size),tiling),
           KOKKOS_LAMBDA(const StreamIndex i, const StreamIndex j, const StreamIndex k, const StreamIndex l)
           { 
             a.view[is][ic](i,j,k,l) = scalar; 
@@ -225,12 +237,14 @@ template <int Ns, int Nc>
 void perform_copy(const deviceSpinor<Ns,Nc> a, const deviceSpinor<Ns,Nc> b) {
   constexpr auto rank = a.view[0][0].rank();
   const auto stream_array_size = a.view[0][0].extent(0);
-  const auto tiling = get_tiling(a.view[0][0]);
+  const Policy<rank> 
+    default_policy(make_repeated_sequence<rank>(0), make_repeated_sequence<rank>(stream_array_size));
+  const auto tiling = get_tiling(a.view[0][0], default_policy);
   for(int is = 0; is < Ns; is++){
     for(int ic = 0; ic < Nc; ic++){
       Kokkos::parallel_for(
           "copy",
-          Policy<rank>(make_repeated_sequence<rank>(0), make_repeated_sequence<rank>(stream_array_size), tiling),
+          Policy<rank>(make_repeated_sequence<rank>(0), make_repeated_sequence<rank>(stream_array_size),tiling),
           KOKKOS_LAMBDA(const StreamIndex i, const StreamIndex j, const StreamIndex k, const StreamIndex l)
           {
             b.view[is][ic](i,j,k,l) = a.view[is][ic](i,j,k,l);
@@ -245,7 +259,9 @@ void perform_scale(const deviceSpinor<Ns,Nc> a, const deviceSpinor<Ns,Nc> b,
                    const val_t scalar) {
   constexpr auto rank = a.view[0][0].rank();
   const auto stream_array_size = a.view[0][0].extent(0);
-  const auto tiling = get_tiling(a.view[0][0]);
+  const Policy<rank> 
+    default_policy(make_repeated_sequence<rank>(0), make_repeated_sequence<rank>(stream_array_size));
+  const auto tiling = get_tiling(a.view[0][0], default_policy);
   for(int is = 0; is < Ns; is++){
     for(int ic = 0; ic < Nc; ic++){
       Kokkos::parallel_for(
@@ -263,7 +279,9 @@ void perform_add(const deviceSpinor<Ns,Nc> a,
                  const deviceSpinor<Ns,Nc> b, const deviceSpinor<Ns,Nc> c) {
   constexpr auto rank = a.view[0][0].rank();
   const auto stream_array_size = a.view[0][0].extent(0);
-  const auto tiling = get_tiling(a.view[0][0]);
+  const Policy<rank> 
+    default_policy(make_repeated_sequence<rank>(0), make_repeated_sequence<rank>(stream_array_size));
+  const auto tiling = get_tiling(a.view[0][0], default_policy);
   for(int is = 0; is < Ns; is++){
     for(int ic = 0; ic < Nc; ic++){
       Kokkos::parallel_for(
@@ -281,7 +299,9 @@ void perform_triad(const deviceSpinor<Ns,Nc> a, const deviceSpinor<Ns,Nc> b,
                    const deviceSpinor<Ns,Nc> c, const val_t scalar) {
   constexpr auto rank = a.view[0][0].rank();
   const auto stream_array_size = a.view[0][0].extent(0);
-  const auto tiling = get_tiling(a.view[0][0]);
+  const Policy<rank> 
+    default_policy(make_repeated_sequence<rank>(0), make_repeated_sequence<rank>(stream_array_size));
+  const auto tiling = get_tiling(a.view[0][0], default_policy);
   for(int is = 0; is < Ns; is++){
     for(int ic = 0; ic < Nc; ic++){
       Kokkos::parallel_for(
