@@ -142,7 +142,7 @@ struct deviceSpinor {
       { 
         for(int is = 0; is < Ns; ++is){
           for(int ic = 0; ic < Nc; ++ic){
-            view[is][ic](i,j,k,l) = init; 
+            V[is][ic](i,j,k,l) = init; 
           }
         }
       }
