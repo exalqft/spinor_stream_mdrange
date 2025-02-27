@@ -122,10 +122,19 @@ struct deviceSpinor {
 
   deviceSpinor(std::size_t N0, std::size_t N1, std::size_t N2, std::size_t N3, const val_t init)
   {
-    Kokkos::realloc(Kokkos::WithoutInitializing, view, N0, N1, N2, N3);
+    do_init(N0,N1,N2,N3,view,init);
+  }
+  
+  // need to take care of 'this'-pointer capture 
+  void
+  do_init(std::size_t N0, std::size_t N1, std::size_t N2, std::size_t N3, 
+          StreamDeviceArray<Ns,Nc> & V, const val_t init){
+    Kokkos::realloc(Kokkos::WithoutInitializing, V, N0, N1, N2, N3);
     
-    constexpr auto rank = view.rank();
-    const auto tiling = get_tiling(view);
+    // need a const view to get the constexpr rank
+    const StreamDeviceArray<Ns,Nc> vconst = V;
+    constexpr auto rank = vconst.rank();
+    const auto tiling = get_tiling(vconst);
     Kokkos::parallel_for(
       "init", 
       Policy<rank>(make_repeated_sequence<rank>(0), 
@@ -133,7 +142,7 @@ struct deviceSpinor {
       KOKKOS_LAMBDA(const StreamIndex i, const StreamIndex j, const StreamIndex k, const StreamIndex l,
                     const StreamIndex is, const StreamIndex ic)
       { 
-        view(i,j,k,l,is,ic) = init; 
+        V(i,j,k,l,is,ic) = init; 
       }
     );
     Kokkos::fence();

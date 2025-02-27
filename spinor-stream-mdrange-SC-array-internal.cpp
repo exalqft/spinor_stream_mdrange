@@ -116,15 +116,25 @@ struct deviceSpinor {
 
   deviceSpinor(std::size_t N0, std::size_t N1, std::size_t N2, std::size_t N3, const val_t init)
   {
+    do_init(N0,N1,N2,N3,view,init);
+  }
+
+  // need to take care of 'this'-pointer capture
+  void
+  do_init(std::size_t N0, std::size_t N1, std::size_t N2, std::size_t N3,
+          Kokkos::Array<Kokkos::Array<StreamDeviceArray,Nc>,Ns> & V, const val_t init)
+  {
     for(int is = 0; is < Ns; ++is){
       for(int ic = 0; ic < Nc; ++ic){
-        Kokkos::realloc(Kokkos::WithoutInitializing, view[is][ic], N0, N1, N2, N3);
+        Kokkos::realloc(Kokkos::WithoutInitializing, V[is][ic], N0, N1, N2, N3);
       }
     }
     
-    constexpr auto rank = view[0][0].rank();
-    const auto stream_array_size = view[0][0].extent(0);
-    const auto tiling = get_tiling(view[0][0]);
+    // need a const view to get the constexpr rank
+    const StreamDeviceArray vconst = V[0][0];
+    constexpr auto rank = vconst.rank();
+    const auto stream_array_size = V[0][0].extent(0);
+    const auto tiling = get_tiling(V[0][0]);
     Kokkos::parallel_for(
       "init", 
       Policy<rank>(make_repeated_sequence<rank>(0), make_repeated_sequence<rank>(stream_array_size), tiling),
@@ -140,7 +150,7 @@ struct deviceSpinor {
     Kokkos::fence();
   }
 
-  StreamDeviceArray view[Ns][Nc];
+  Kokkos::Array<Kokkos::Array<StreamDeviceArray,Nc>,Ns> view;
 };
 
 template <int Ns, int Nc>
