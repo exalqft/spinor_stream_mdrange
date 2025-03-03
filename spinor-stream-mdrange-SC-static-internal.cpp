@@ -160,9 +160,9 @@ struct deviceSpinor {
       Policy<rank>(make_repeated_sequence<rank>(0), {N0,N1,N2,N3}, tiling),
       KOKKOS_LAMBDA(const StreamIndex i, const StreamIndex j, const StreamIndex k, const StreamIndex l)
       { 
-        #pragma unroll
+        //#pragma unroll
         for(int is = 0; is < Ns; ++is){
-          #pragma unroll
+          //#pragma unroll
           for(int ic = 0; ic < Nc; ++ic){
             V(i,j,k,l,is,ic) = init;
           }
@@ -235,9 +235,9 @@ void perform_set(const deviceSpinor<Ns,Nc> a, const val_t scalar) {
                    tiling),
       KOKKOS_LAMBDA(const StreamIndex i, const StreamIndex j, const StreamIndex k, const StreamIndex l)
       { 
-        #pragma unroll
+        //#pragma unroll
         for(int is = 0; is < Ns; ++is){
-          #pragma unroll
+          //#pragma unroll
           for(int ic = 0; ic < Nc; ++ic){
             a.view(i,j,k,l,is,ic) = scalar; 
           }
@@ -258,9 +258,9 @@ void perform_copy(const deviceSpinor<Ns,Nc> a, const deviceSpinor<Ns,Nc> b) {
                    tiling),
       KOKKOS_LAMBDA(const StreamIndex i, const StreamIndex j, const StreamIndex k, const StreamIndex l)
       { 
-        #pragma unroll
+        //#pragma unroll
         for(int is = 0; is < Ns; ++is){
-          #pragma unroll
+          //#pragma unroll
           for(int ic = 0; ic < Nc; ++ic){
             b.view(i,j,k,l,is,ic) = a.view(i,j,k,l,is,ic);
           }
@@ -282,9 +282,9 @@ void perform_scale(const deviceSpinor<Ns,Nc> a, const deviceSpinor<Ns,Nc> b,
                    tiling),
       KOKKOS_LAMBDA(const StreamIndex i, const StreamIndex j, const StreamIndex k, const StreamIndex l)
       { 
-        #pragma unroll
+        //#pragma unroll
         for(int is = 0; is < Ns; ++is){
-          #pragma unroll
+          //#pragma unroll
           for(int ic = 0; ic < Nc; ++ic){
             a.view(i,j,k,l,is,ic) = scalar * b.view(i,j,k,l,is,ic);
           }
@@ -307,9 +307,9 @@ void perform_add(const deviceSpinor<Ns,Nc> a,
                    tiling),
       KOKKOS_LAMBDA(const StreamIndex i, const StreamIndex j, const StreamIndex k, const StreamIndex l)
       { 
-        #pragma unroll
+        //#pragma unroll
         for(int is = 0; is < Ns; ++is){
-          #pragma unroll
+          //#pragma unroll
           for(int ic = 0; ic < Nc; ++ic){
             c.view(i,j,k,l,is,ic) = a.view(i,j,k,l,is,ic) + b.view(i,j,k,l,is,ic);
           }
@@ -331,9 +331,9 @@ void perform_triad(const deviceSpinor<Ns,Nc> a, const deviceSpinor<Ns,Nc> b,
                    tiling),
       KOKKOS_LAMBDA(const StreamIndex i, const StreamIndex j, const StreamIndex k, const StreamIndex l)
       { 
-        #pragma unroll
+        //#pragma unroll
         for(int is = 0; is < Ns; ++is){
-          #pragma unroll
+          //#pragma unroll
           for(int ic = 0; ic < Nc; ++ic){
             a.view(i,j,k,l,is,ic) = b.view(i,j,k,l,is,ic) + scalar * c.view(i,j,k,l,is,ic);
           }
