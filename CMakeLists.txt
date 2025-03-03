@@ -27,3 +27,6 @@ target_link_libraries(spinor-stream-mdrange-SC-array-internal Kokkos::kokkos)
 add_executable(spinor-stream-mdrange-SC-static spinor-stream-mdrange-SC-static.cpp)
 target_link_libraries(spinor-stream-mdrange-SC-static Kokkos::kokkos)
 
+add_executable(spinor-stream-mdrange-SC-static-internal spinor-stream-mdrange-SC-static-internal.cpp)
+target_link_libraries(spinor-stream-mdrange-SC-static-internal Kokkos::kokkos)
+
