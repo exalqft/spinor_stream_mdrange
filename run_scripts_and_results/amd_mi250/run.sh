@@ -11,7 +11,7 @@ for nt in 7; do
   export OMP_PROC_BIND=close
   
   for n in $( seq 0 $(( ${#n4[@]} - 1 )) ); do
-    for type in array-external array-internal static; do
+    for type in array-external array-internal static static-internal; do
       results=( $(./spinor-stream-mdrange-SC-${type} -n ${n4[$n]} | grep GB | awk '{print $1 " " $2}') )
       for i in $(seq 0 4); do
         echo $nt ${n4[$n]} ${type} ${results[$(( 2*$i ))]} ${results[$(( 2*$i + 1 ))]} | tee -a results.dat
