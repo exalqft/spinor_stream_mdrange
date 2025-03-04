@@ -106,7 +106,7 @@ In the case of the "6D view" we use all dimensions instead, see [here](https://g
 
 On CPUs we do OpenMP parallelisation over the two outermost dimensions (independently of whether we are dealing with a 4D MDRangePolicy or a 6D one) and on GPUs we extract the recommended tile sizes from the policy and use the outermost 4.
 
-```
+```c++
 template <typename V>    
 auto    
 get_tiling(const V view)    
