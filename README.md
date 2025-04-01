@@ -9,6 +9,8 @@ Three implementations are considered:
 1) **6D view with static spin and colour extents**: `spinor-stream-mdrange-SC-static.cpp` implements
 
 ```c++
+template <int Ns, int Nc>
+using StreamDeviceArray =
 Kokkos::View<val_t****[Ns][Nc], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 [...]
 void perform_set(...){
@@ -29,7 +31,8 @@ void perform_set(...){
 2) **6D view with static spin and colour extents, internal loop over these**: `spinor-stream-mdrange-SC-static-internal.cpp` implements
 
 ```c++
-Kokkos::View<val_t****[Ns][Nc], Kokkos::MemoryTraits<Kokkos::Restrict>>;
+template <int Ns, int Nc>
+using StreamDeviceArray = Kokkos::View<val_t****[Ns][Nc], Kokkos::MemoryTraits<Kokkos::Restrict>>;
 [...]
 void perform_set(...){
   Kokkos::parallel_for(
@@ -52,7 +55,7 @@ void perform_set(...){
 3) **Array of 4D views with internal loops over spin and colour**: `spinor-stream-mdrange-SC-array-internal.cpp` implements
 
 ```c++
-Kokkos::View<val_t****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+using StreamDeviceArray = Kokkos::View<val_t****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 Kokkos::Array<Kokkos::Array<StreamDeviceArray,Nc>,Ns> view;
 [...]
 void perform_set(...){
@@ -74,7 +77,7 @@ void perform_set(...){
 4) **Array of 4D views with external loops over spin and colour**: `spinor-stream-mdrange-SC-array-external.cpp` implements
 
 ```c++
-Kokkos::View<val_t****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+using StreamDeviceArray = Kokkos::View<val_t****, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 Kokkos::Array<Kokkos::Array<StreamDeviceArray,Nc>,Ns> view;
 [...]
 void perform_set(...){
