@@ -17,6 +17,13 @@ bws <- data.frame(bw=c(204.8, 2*204.8,
                        307.2, 2*307.2,
                        1935,
                        1638),
+                  l3=c(256, 512,
+                       256, 512,
+                       #256, 512,
+                       105, 210,
+                       105, 210,
+                       NA,
+                       NA),
                   ylim=c(600, 600,
                          600, 600,
                          #600, 600,
@@ -56,6 +63,14 @@ for( i in 1:length(archs) ){
        ggplot2::geom_point() +
        ggplot2::geom_hline(data = bwdat, aes(yintercept = bw), colour = "blue") +
        ggplot2::geom_hline(data = maxdat, aes(yintercept = bw), colour = "red") +
+       ggplot2::geom_vline(data = bwdat, aes(xintercept = l3), colour = "black", linetype = "dashed") +
+       ggplot2::geom_label(data = bwdat, 
+                           aes(label = sprintf("L3: %.0f MB", l3),
+                               x = 1.2*l3),
+                          inherit.aes=FALSE,
+                          size = 2.5,
+                          hjust = "left",
+                          y = 0) + 
        ggplot2::geom_point(data = bwdat, shape = NA, fill = NA, colour = NA, x = 1,
                            aes(y = bw)) +
        ggplot2::geom_label(data = bwdat, 
